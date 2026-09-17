@@ -11,11 +11,17 @@ import javax.mail.internet.MimeMessage;
 
 public class EmailUtil {
 
-    private static final String CORREO_REMITENTE = "juansediazg4@gmail.com";
-    private static final String PASSWORD_APP = "ageqibrhdyadkwjc";
+    // Lee las credenciales del correo desde variables de entorno del sistema
+    private static final String CORREO_REMITENTE = System.getenv("MAIL_USER");
+    private static final String PASSWORD_APP = System.getenv("MAIL_PASSWORD");
 
     public static boolean enviarCorreoRecuperacion(String destino, String nombreUsuario, String claveRecuperada) {
-        
+
+        if (CORREO_REMITENTE == null || PASSWORD_APP == null) {
+            System.err.println("ERROR: Variables de entorno MAIL_USER o MAIL_PASSWORD no configuradas.");
+            return false;
+        }
+
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
@@ -34,21 +40,19 @@ public class EmailUtil {
             message.setFrom(new InternetAddress(CORREO_REMITENTE));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(destino));
             message.setSubject("Recuperación de Acceso - Gestión Fútbol");
-            
+
             String contenidoHtml = "<h3>Hola " + nombreUsuario + ",</h3>"
                     + "<p>Has solicitado la recuperación de tu acceso.</p>"
                     + "<p>Tu contraseña actual es: <b>" + claveRecuperada + "</b></p>"
-                    + "<p>Por seguridad, te recomendamos iniciar sesión y modificarla cuanto antes.</p>";
-                    
-            message.setContent(contenidoHtml, "text/html; charset=utf-8");
+                    + "<p>Por seguridad, te recomendamos cambiarla cuanto antes.</p>";
 
+            message.setContent(contenidoHtml, "text/html; charset=utf-8");
             Transport.send(message);
             System.out.println("Correo enviado exitosamente a: " + destino);
             return true;
 
         } catch (MessagingException e) {
             e.printStackTrace();
-            System.out.println("Error enviando el correo: " + e.getMessage());
             return false;
         }
     }
